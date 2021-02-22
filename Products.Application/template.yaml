@@ -8,6 +8,14 @@ Parameters:
     Type: 'AWS::EC2::Subnet::Id'
   SubNetId2:
     Type: 'AWS::EC2::Subnet::Id'
+  SubNetId3:
+    Type: 'AWS::EC2::Subnet::Id'
+  SubNetId4:
+    Type: 'AWS::EC2::Subnet::Id'
+  SubNetId5:
+    Type: 'AWS::EC2::Subnet::Id'
+  SubNetId6:
+    Type: 'AWS::EC2::Subnet::Id'
   EnvironmentType:
     Description: The environment type
     Type: String
@@ -24,13 +32,17 @@ Mappings:
       uat: vanlune-bin-uat
       prod: vanlune-bin-prod
     Function.Properties.Products.Bucket:
-      dev: vanlune-products-dev
-      uat: vanlune-products-uat
-      prod: vanlune-products-prod
+      dev: vanlune-database
+      uat: vanlune-database
+      prod: vanlune-database
     Stage.ApiGateway:
       dev: Dev
       uat: Uat
       prod: Prod
+    DbSecretName: 
+      dev: vanlune-db-dev
+      uat: vanlune-db-dev
+      prod: vanlune-db-dev
 Resources:
  # API Functinos
   ApiGatewayApi:
@@ -44,12 +56,12 @@ Resources:
         AllowMethods: "'*'"
         AllowHeaders: "'*'"
         AllowOrigin: "'*'"
-  CreateOrUpdatProduct:
+  CreateProduct:
     Type: 'AWS::Serverless::Function'
     Properties:
-      FunctionName: vanlune-product-create-update
+      FunctionName: vanlune-product-create
       Handler: >-
-        Products.Application::Products.Application.Function::CreateOrUpdateProducts
+        Products.Application::Products.Application.Function::CreateProducts
       Runtime: dotnetcore3.1
       CodeUri:
         Bucket: !FindInMap 
@@ -68,7 +80,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGatewayApi
-            Path: '/product'
+            Path: '/products'
             Method: post        
       Environment:
         Variables:
@@ -76,10 +88,70 @@ Resources:
             - EnvironmentVariablesMap
             - Function.Properties.Products.Bucket
             - !Ref EnvironmentType
+          DB_SECRET: !FindInMap 
+            - EnvironmentVariablesMap
+            - DbSecretName
+            - !Ref EnvironmentType
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroupId
+        SubnetIds:
+          - !Ref SubNetId1
+          - !Ref SubNetId2
+          - !Ref SubNetId3
+          - !Ref SubNetId4
+          - !Ref SubNetId5
+          - !Ref SubNetId6
+  UpdatProduct:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: vanlune-product-update
+      Handler: >-
+        Products.Application::Products.Application.Function::UpdateProducts
+      Runtime: dotnetcore3.1
+      CodeUri:
+        Bucket: !FindInMap 
+          - EnvironmentVariablesMap
+          - Function.Properties.CodeUri.Bucket
+          - !Ref EnvironmentType
+        Key: Products.zip
+      MemorySize: 256
+      Timeout: 900
+      Role: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':role/role-lambda-vanlune']]
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Tracing: Active
+      Events:
+        HttpPost: 
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: '/products'
+            Method: put        
+      Environment:
+        Variables:
+          AWS_S3_Bucket: !FindInMap 
+            - EnvironmentVariablesMap
+            - Function.Properties.Products.Bucket
+            - !Ref EnvironmentType
+          DB_SECRET: !FindInMap 
+            - EnvironmentVariablesMap
+            - DbSecretName
+            - !Ref EnvironmentType
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroupId
+        SubnetIds:
+          - !Ref SubNetId1
+          - !Ref SubNetId2
+          - !Ref SubNetId3
+          - !Ref SubNetId4
+          - !Ref SubNetId5
+          - !Ref SubNetId6
   DeleteProduct:
     Type: 'AWS::Serverless::Function'
     Properties:
-      FunctionName: vanlune-product-delete
+      FunctionName: vanlune-product-delete-all
       Handler: >-
         Products.Application::Products.Application.Function::DeleteProducts
       Runtime: dotnetcore3.1
@@ -100,7 +172,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGatewayApi
-            Path: '/product'
+            Path: '/products'
             Method: delete
       Environment:
         Variables:
@@ -108,10 +180,24 @@ Resources:
             - EnvironmentVariablesMap
             - Function.Properties.Products.Bucket
             - !Ref EnvironmentType
+          DB_SECRET: !FindInMap 
+            - EnvironmentVariablesMap
+            - DbSecretName
+            - !Ref EnvironmentType
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroupId
+        SubnetIds:
+          - !Ref SubNetId1
+          - !Ref SubNetId2
+          - !Ref SubNetId3
+          - !Ref SubNetId4
+          - !Ref SubNetId5
+          - !Ref SubNetId6
   GetAllProductsByCategory:
     Type: 'AWS::Serverless::Function'
     Properties:
-      FunctionName: vanlune-product-get-all
+      FunctionName: vanlune-product-get-all-by-category
       Handler: >-
         Products.Application::Products.Application.Function::GetAllProductsByCategory
       Runtime: dotnetcore3.1
@@ -132,7 +218,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGatewayApi
-            Path: '/product'
+            Path: '/products'
             Method: get
       Environment:
         Variables:
@@ -140,4 +226,339 @@ Resources:
             - EnvironmentVariablesMap
             - Function.Properties.Products.Bucket
             - !Ref EnvironmentType
-  
+          DB_SECRET: !FindInMap 
+            - EnvironmentVariablesMap
+            - DbSecretName
+            - !Ref EnvironmentType
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroupId
+        SubnetIds:
+          - !Ref SubNetId1
+          - !Ref SubNetId2
+          - !Ref SubNetId3
+          - !Ref SubNetId4
+          - !Ref SubNetId5
+          - !Ref SubNetId6
+  CreateCategory:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: vanlune-category-create
+      Handler: >-
+        Products.Application::Products.Application.Function::CreateCategory
+      Runtime: dotnetcore3.1
+      CodeUri:
+        Bucket: !FindInMap 
+          - EnvironmentVariablesMap
+          - Function.Properties.CodeUri.Bucket
+          - !Ref EnvironmentType
+        Key: Products.zip
+      MemorySize: 256
+      Timeout: 900
+      Role: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':role/role-lambda-vanlune']]
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Tracing: Active
+      Events:
+        HttpPost: 
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: '/products/category'
+            Method: post        
+      Environment:
+        Variables:
+          AWS_S3_Bucket: !FindInMap 
+            - EnvironmentVariablesMap
+            - Function.Properties.Products.Bucket
+            - !Ref EnvironmentType
+          DB_SECRET: !FindInMap 
+            - EnvironmentVariablesMap
+            - DbSecretName
+            - !Ref EnvironmentType
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroupId
+        SubnetIds:
+          - !Ref SubNetId1
+          - !Ref SubNetId2
+          - !Ref SubNetId3
+          - !Ref SubNetId4
+          - !Ref SubNetId5
+          - !Ref SubNetId6
+  GetAllCategories:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: vanlune-category-get-all
+      Handler: >-
+        Products.Application::Products.Application.Function::GetAllCategories
+      Runtime: dotnetcore3.1
+      CodeUri:
+        Bucket: !FindInMap 
+          - EnvironmentVariablesMap
+          - Function.Properties.CodeUri.Bucket
+          - !Ref EnvironmentType
+        Key: Products.zip
+      MemorySize: 256
+      Timeout: 900
+      Role: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':role/role-lambda-vanlune']]
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Tracing: Active
+      Events:
+        HttpPost: 
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: '/products/category/all'
+            Method: get
+      Environment:
+        Variables:
+          AWS_S3_Bucket: !FindInMap 
+            - EnvironmentVariablesMap
+            - Function.Properties.Products.Bucket
+            - !Ref EnvironmentType
+          DB_SECRET: !FindInMap 
+            - EnvironmentVariablesMap
+            - DbSecretName
+            - !Ref EnvironmentType
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroupId
+        SubnetIds:
+          - !Ref SubNetId1
+          - !Ref SubNetId2
+          - !Ref SubNetId3
+          - !Ref SubNetId4
+          - !Ref SubNetId5
+          - !Ref SubNetId6
+  GetCategory:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: vanlune-category-get
+      Handler: >-
+        Products.Application::Products.Application.Function::GetCategory
+      Runtime: dotnetcore3.1
+      CodeUri:
+        Bucket: !FindInMap 
+          - EnvironmentVariablesMap
+          - Function.Properties.CodeUri.Bucket
+          - !Ref EnvironmentType
+        Key: Products.zip
+      MemorySize: 256
+      Timeout: 900
+      Role: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':role/role-lambda-vanlune']]
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Tracing: Active
+      Events:
+        HttpPost: 
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: '/products/category'
+            Method: get
+      Environment:
+        Variables:
+          AWS_S3_Bucket: !FindInMap 
+            - EnvironmentVariablesMap
+            - Function.Properties.Products.Bucket
+            - !Ref EnvironmentType
+          DB_SECRET: !FindInMap 
+            - EnvironmentVariablesMap
+            - DbSecretName
+            - !Ref EnvironmentType
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroupId
+        SubnetIds:
+          - !Ref SubNetId1
+          - !Ref SubNetId2
+          - !Ref SubNetId3
+          - !Ref SubNetId4
+          - !Ref SubNetId5
+          - !Ref SubNetId6
+  CreateTag:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: vanlune-tags-create
+      Handler: >-
+        Products.Application::Products.Application.Function::CreateTag
+      Runtime: dotnetcore3.1
+      CodeUri:
+        Bucket: !FindInMap 
+          - EnvironmentVariablesMap
+          - Function.Properties.CodeUri.Bucket
+          - !Ref EnvironmentType
+        Key: Products.zip
+      MemorySize: 256
+      Timeout: 900
+      Role: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':role/role-lambda-vanlune']]
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Tracing: Active
+      Events:
+        HttpPost: 
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: '/products/tags'
+            Method: post        
+      Environment:
+        Variables:
+          AWS_S3_Bucket: !FindInMap 
+            - EnvironmentVariablesMap
+            - Function.Properties.Products.Bucket
+            - !Ref EnvironmentType
+          DB_SECRET: !FindInMap 
+            - EnvironmentVariablesMap
+            - DbSecretName
+            - !Ref EnvironmentType
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroupId
+        SubnetIds:
+          - !Ref SubNetId1
+          - !Ref SubNetId2
+          - !Ref SubNetId3
+          - !Ref SubNetId4
+          - !Ref SubNetId5
+          - !Ref SubNetId6
+  GetTags:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: vanlune-tags-get-all
+      Handler: >-
+        Products.Application::Products.Application.Function::GetTags
+      Runtime: dotnetcore3.1
+      CodeUri:
+        Bucket: !FindInMap 
+          - EnvironmentVariablesMap
+          - Function.Properties.CodeUri.Bucket
+          - !Ref EnvironmentType
+        Key: Products.zip
+      MemorySize: 256
+      Timeout: 900
+      Role: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':role/role-lambda-vanlune']]
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Tracing: Active
+      Events:
+        HttpPost: 
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: '/products/tags'
+            Method: get        
+      Environment:
+        Variables:
+          AWS_S3_Bucket: !FindInMap 
+            - EnvironmentVariablesMap
+            - Function.Properties.Products.Bucket
+            - !Ref EnvironmentType
+          DB_SECRET: !FindInMap 
+            - EnvironmentVariablesMap
+            - DbSecretName
+            - !Ref EnvironmentType
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroupId
+        SubnetIds:
+          - !Ref SubNetId1
+          - !Ref SubNetId2
+          - !Ref SubNetId3
+          - !Ref SubNetId4
+          - !Ref SubNetId5
+          - !Ref SubNetId6
+  CreateVariants:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: vanlune-variants-create
+      Handler: >-
+        Products.Application::Products.Application.Function::CreateVariants
+      Runtime: dotnetcore3.1
+      CodeUri:
+        Bucket: !FindInMap 
+          - EnvironmentVariablesMap
+          - Function.Properties.CodeUri.Bucket
+          - !Ref EnvironmentType
+        Key: Products.zip
+      MemorySize: 256
+      Timeout: 900
+      Role: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':role/role-lambda-vanlune']]
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Tracing: Active
+      Events:
+        HttpPost: 
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: '/products/variants'
+            Method: post        
+      Environment:
+        Variables:
+          AWS_S3_Bucket: !FindInMap 
+            - EnvironmentVariablesMap
+            - Function.Properties.Products.Bucket
+            - !Ref EnvironmentType
+          DB_SECRET: !FindInMap 
+            - EnvironmentVariablesMap
+            - DbSecretName
+            - !Ref EnvironmentType
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroupId
+        SubnetIds:
+          - !Ref SubNetId1
+          - !Ref SubNetId2
+          - !Ref SubNetId3
+          - !Ref SubNetId4
+          - !Ref SubNetId5
+          - !Ref SubNetId6
+  GetVariants:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: vanlune-variants-get-all
+      Handler: >-
+        Products.Application::Products.Application.Function::GetVariants
+      Runtime: dotnetcore3.1
+      CodeUri:
+        Bucket: !FindInMap 
+          - EnvironmentVariablesMap
+          - Function.Properties.CodeUri.Bucket
+          - !Ref EnvironmentType
+        Key: Products.zip
+      MemorySize: 256
+      Timeout: 900
+      Role: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':role/role-lambda-vanlune']]
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Tracing: Active
+      Events:
+        HttpPost: 
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: '/products/variants'
+            Method: get        
+      Environment:
+        Variables:
+          AWS_S3_Bucket: !FindInMap 
+            - EnvironmentVariablesMap
+            - Function.Properties.Products.Bucket
+            - !Ref EnvironmentType
+          DB_SECRET: !FindInMap 
+            - EnvironmentVariablesMap
+            - DbSecretName
+            - !Ref EnvironmentType
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroupId
+        SubnetIds:
+          - !Ref SubNetId1
+          - !Ref SubNetId2
+          - !Ref SubNetId3
+          - !Ref SubNetId4
+          - !Ref SubNetId5
+          - !Ref SubNetId6

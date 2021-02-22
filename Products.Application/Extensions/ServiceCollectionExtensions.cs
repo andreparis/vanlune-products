@@ -9,6 +9,10 @@ using Microsoft.Extensions.DependencyInjection;
 using System.IO;
 using System.Reflection;
 using System;
+using Products.Infrastructure.DataAccess.Database.Base;
+using Products.Domain.DataAccess.Repositories;
+using Products.Infrastructure.DataAccess.Database;
+using Products.Infrastructure.DataAccess.Database.Aggregation;
 
 namespace Products.Application.Extensions
 {
@@ -27,7 +31,14 @@ namespace Products.Application.Extensions
             services.AddSingleton<ILogger, Logger>();
             services.AddSingleton<IAwsSecretManagerService, AwsSecretManagerService>();
 
-            services.AddTransient<IProductsRepository, ProductsRepository>();
+            services.AddSingleton<IProductsS3, ProductsS3>();
+
+            services.AddSingleton<IMySqlConnHelper, MySqlConnHelper>();
+            services.AddSingleton<IProductsRepository, ProductsRepository>();
+            services.AddSingleton<ICategoryRepository, CategoryRepository>();
+            services.AddSingleton<IVariantsRepository, VariantsRepository>();
+            services.AddSingleton<ITagsRepository, TagsRepository>();
+            services.AddSingleton<IProductAggregationRepository, ProductAggregationRepository>();
 
             return services;
         }

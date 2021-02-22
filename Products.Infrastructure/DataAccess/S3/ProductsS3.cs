@@ -10,11 +10,11 @@ using System.Text;
 
 namespace Products.Infraestructure.DataAccess.S3
 {
-    public class ProductsRepository : S3Helper<Product>, IProductsRepository
+    public class ProductsS3 : S3Helper<Product>, IProductsS3
     {
         private readonly string KEY_BASE = "product/";
 
-        public ProductsRepository(IConfiguration configuration, 
+        public ProductsS3(IConfiguration configuration, 
             ILogger logger) : base(logger, configuration) 
         {
         }

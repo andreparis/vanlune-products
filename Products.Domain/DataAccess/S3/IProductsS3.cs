@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Products.Domain.DataAccess.S3
 {
-    public interface IProductsRepository : IS3Helper<Product>
+    public interface IProductsS3 : IS3Helper<Product>
     {
         void DeleteProducts(string setting);
         void AddProduct(string settingName, Product setting);

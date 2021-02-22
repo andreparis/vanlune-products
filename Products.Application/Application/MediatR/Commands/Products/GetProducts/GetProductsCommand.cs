@@ -8,6 +8,6 @@ namespace Products.Application.Application.MediatR.Commands.GetProducts
 {
     public class GetProductsCommand : IRequest<Response>
     {
-        public Category Category { get; set; }
+        public string CategoryName { get; set; }
     }
 }

@@ -32,35 +32,25 @@ namespace Products.Infraestructure.Security
             }
             else
             {
-                _logger.Info($"Lambda region is {configuration["AWS_REGION"]}");
-
-                _secretsManagerClient = new AmazonSecretsManagerClient(RegionEndpoint.GetBySystemName(configuration["AWS_REGION"]));
+                _secretsManagerClient = new AmazonSecretsManagerClient(RegionEndpoint.USEast1);
             }   
         }
 
-        public string GetSecret(string secret)
+        public string GetSecret(string secretName)
         {
-            if (!string.IsNullOrEmpty(secret) && _dictionary.ContainsKey(secret))
-            {
-                _logger.Info("Key already recovered, returning conection string");
-                return _dictionary[secret];
-            }
 
-            var memoryStream = new MemoryStream();
+            _logger.Info($"Getting secret of {secretName}");
 
-            _logger.Info($"Lambda secretName is {secret}");
+            if (_dictionary.ContainsKey(secretName)) return _dictionary[secretName];
 
-            GetSecretValueRequest request = new GetSecretValueRequest
-            {
-                SecretId = secret,
-                VersionStage = "AWSCURRENT" // VersionStage defaults to AWSCURRENT if unspecified.
-            };
+            string secret = "";
+
+            MemoryStream memoryStream = new MemoryStream();
+            GetSecretValueRequest request = new GetSecretValueRequest();
+            request.SecretId = secretName;
+            request.VersionStage = "AWSCURRENT"; // VersionStage defaults to AWSCURRENT if unspecified.
 
             GetSecretValueResponse response = null;
-
-            // In this sample we only handle the specific exceptions for the 'GetSecretValue' API.
-            // See https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
-            // We rethrow the exception by default.
 
             try
             {
@@ -68,51 +58,38 @@ namespace Products.Infraestructure.Security
             }
             catch (DecryptionFailureException e)
             {
-                _logger.Error($"{e.Message} at {e.StackTrace}");
                 // Secrets Manager can't decrypt the protected secret text using the provided KMS key.
                 // Deal with the exception here, and/or rethrow at your discretion.
                 throw;
             }
             catch (InternalServiceErrorException e)
             {
-                _logger.Error($"{e.Message} at {e.StackTrace}");
                 // An error occurred on the server side.
                 // Deal with the exception here, and/or rethrow at your discretion.
                 throw;
             }
             catch (InvalidParameterException e)
             {
-                _logger.Error($"{e.Message} at {e.StackTrace}");
                 // You provided an invalid value for a parameter.
                 // Deal with the exception here, and/or rethrow at your discretion
                 throw;
             }
             catch (InvalidRequestException e)
             {
-                _logger.Error($"{e.Message} at {e.StackTrace}");
                 // You provided a parameter value that is not valid for the current state of the resource.
                 // Deal with the exception here, and/or rethrow at your discretion.
                 throw;
             }
             catch (ResourceNotFoundException e)
             {
-                _logger.Error($"{e.Message} at {e.StackTrace}");
                 // We can't find the resource that you asked for.
                 // Deal with the exception here, and/or rethrow at your discretion.
                 throw;
             }
             catch (System.AggregateException ae)
             {
-                foreach(var e in ae.InnerExceptions)
-                    _logger.Error($"{e.Message} at {e.StackTrace}");
                 // More than one of the above exceptions were triggered.
                 // Deal with the exception here, and/or rethrow at your discretion.
-                throw;
-            }
-            catch (Exception e)
-            {
-                _logger.Error($"{e.Message} at {e.StackTrace}");
-                
                 throw;
             }
 
@@ -120,28 +97,18 @@ namespace Products.Infraestructure.Security
             // Depending on whether the secret is a string or binary, one of these fields will be populated.
             if (response.SecretString != null)
             {
-                try
-                {
-                    var secretValue = response.SecretString;
-                    secretValue = JObject.Parse(secretValue).SelectToken("password").ToObject<string>();
+                secret = response.SecretString;
 
-                    _dictionary.Add(secret, secretValue);
-                    _logger.Info($"secret recovered");
-
-                    return secretValue;
-                }
-                catch (Exception ex)
-                {
-                    _logger.Error($"Cannot recovered the database secretkey {ex.InnerException}");
-                    throw;
-                }
+                _dictionary.Add(secretName, secret);
             }
             else
             {
                 memoryStream = response.SecretBinary;
                 StreamReader reader = new StreamReader(memoryStream);
-                string decodedBinarySecret = Encoding.UTF8.GetString(Convert.FromBase64String(reader.ReadToEnd()));
+                string decodedBinarySecret = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(reader.ReadToEnd()));
             }
+
+            _logger.Info($"Secret is {secret}");
 
             return secret;
         }

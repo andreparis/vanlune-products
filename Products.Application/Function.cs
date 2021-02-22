@@ -9,8 +9,15 @@ using Amazon.Lambda.APIGatewayEvents;
 using System.Collections.Generic;
 using System.Net;
 using Products.Application.Application.MediatR.Commands.GetProducts;
-using Products.Application.Application.MediatR.Commands.CreateOrUpdateProducts;
 using Products.Application.Application.MediatR.Commands.DeleteProducts;
+using Products.Application.Application.MediatR.Commands.Category.GetCategory;
+using Products.Application.Application.MediatR.Commands.Tags.CreateOrUpdateTags;
+using Products.Application.Application.MediatR.Commands.Tags.GetTags;
+using Products.Application.Application.MediatR.Commands.Category.GetAllCategories;
+using Products.Application.Application.MediatR.Commands.Variants.CreateOrUpdateVariants;
+using Products.Application.Application.MediatR.Commands.Variants.GetVariants;
+using Products.Application.Application.MediatR.Commands.CreateProducts;
+using Products.Application.Application.MediatR.Commands.Category.CreateCategory;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 namespace Products.Application
@@ -35,11 +42,18 @@ namespace Products.Application
         #region APIs
 
         #region Products
-        public APIGatewayProxyResponse CreateOrUpdateProducts(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
+        public APIGatewayProxyResponse CreateProducts(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
         {
             lambdaContext.Logger.LogLine($"Body {request.Body}");
 
-            return Request<CreateOrUpdateProductsCommand>(request.Body);
+            return Request<UpdateProductsCommand>(request.Body);
+        }
+
+        public APIGatewayProxyResponse UpdateProducts(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
+        {
+            lambdaContext.Logger.LogLine($"Body {request.Body}");
+
+            return Request<UpdateProductsCommand>(request.Body);
         }
 
         public APIGatewayProxyResponse DeleteProducts(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
@@ -51,17 +65,93 @@ namespace Products.Application
 
         public APIGatewayProxyResponse GetAllProductsByCategory(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
         {
-            Console.WriteLine($"Requested {request.QueryStringParameters["name"]}");
+            Console.WriteLine($"Requested {request.QueryStringParameters["category"]}");
+
+            var name = request.QueryStringParameters["category"];
+
+            if (string.IsNullOrEmpty(name))
+                return Response("You must inform a category's name!");
 
             lambdaContext.Logger.LogLine($"GetAllProducts query");
 
             var command = new GetProductsCommand() 
-            { 
-                Category = new Domain.Entities.Category() 
-                { 
-                    Name = request.QueryStringParameters ["name"]
-                } 
+            {
+                CategoryName = name
             };
+
+            return MediatrSend(command);
+        }
+        #endregion
+
+
+        #region Categories
+        public APIGatewayProxyResponse CreateCategory(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
+        {
+            lambdaContext.Logger.LogLine($"Body {request.Body}");
+
+            return Request<CreateCategoryCommand>(request.Body);
+        }
+
+        public APIGatewayProxyResponse GetCategory(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
+        {
+            Console.WriteLine($"Requested {request.QueryStringParameters["id"]}");
+
+            var id = request.QueryStringParameters["id"];
+
+            if (string.IsNullOrEmpty(id))
+                return Response("You must inform a category's Id!");
+
+            lambdaContext.Logger.LogLine($"GetAllCategories query");
+
+            var command = new GetCategoryCommand()
+            {
+                Id = Convert.ToInt32(id)
+            };
+
+            return MediatrSend(command);
+        }
+
+        public APIGatewayProxyResponse GetAllCategories(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
+        {
+            lambdaContext.Logger.LogLine($"GetAllCategories query");
+
+            var command = new GetAllCategoriesCommand();
+
+            return MediatrSend(command);
+        }
+        #endregion
+
+        #region Tags
+        public APIGatewayProxyResponse CreateTag(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
+        {
+            lambdaContext.Logger.LogLine($"Body {request.Body}");
+
+            return Request<CreateOrUpdateTagsCommand>(request.Body);
+        }
+
+        public APIGatewayProxyResponse GetTags(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
+        {
+            lambdaContext.Logger.LogLine($"GetTags query");
+
+            var command = new GetTagsCommand();
+
+            return MediatrSend(command);
+        }
+        #endregion
+
+        #region Variansts
+        public APIGatewayProxyResponse CreateVariants(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
+        {
+            lambdaContext.Logger.LogLine($"Body {request.Body}");
+
+            return Request<CreateOrUpdateVariantsCommand>(request.Body);
+        }
+
+        public APIGatewayProxyResponse GetVariants(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
+        {
+            lambdaContext.Logger.LogLine($"GetVariants query");
+
+            var command = new GetVariantsCommand();
 
             return MediatrSend(command);
         }
