@@ -8,14 +8,6 @@ Parameters:
     Type: 'AWS::EC2::Subnet::Id'
   SubNetId2:
     Type: 'AWS::EC2::Subnet::Id'
-  SubNetId3:
-    Type: 'AWS::EC2::Subnet::Id'
-  SubNetId4:
-    Type: 'AWS::EC2::Subnet::Id'
-  SubNetId5:
-    Type: 'AWS::EC2::Subnet::Id'
-  SubNetId6:
-    Type: 'AWS::EC2::Subnet::Id'
   EnvironmentType:
     Description: The environment type
     Type: String
@@ -40,9 +32,9 @@ Mappings:
       uat: Uat
       prod: Prod
     DbSecretName: 
-      dev: vanlune-db-dev
-      uat: vanlune-db-dev
-      prod: vanlune-db-dev
+      dev: db-dev
+      uat: db-dev
+      prod: db-dev
 Resources:
  # API Functinos
   ApiGatewayApi:
@@ -98,10 +90,6 @@ Resources:
         SubnetIds:
           - !Ref SubNetId1
           - !Ref SubNetId2
-          - !Ref SubNetId3
-          - !Ref SubNetId4
-          - !Ref SubNetId5
-          - !Ref SubNetId6
   UpdatProduct:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -144,10 +132,6 @@ Resources:
         SubnetIds:
           - !Ref SubNetId1
           - !Ref SubNetId2
-          - !Ref SubNetId3
-          - !Ref SubNetId4
-          - !Ref SubNetId5
-          - !Ref SubNetId6
   DeleteProduct:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -190,10 +174,6 @@ Resources:
         SubnetIds:
           - !Ref SubNetId1
           - !Ref SubNetId2
-          - !Ref SubNetId3
-          - !Ref SubNetId4
-          - !Ref SubNetId5
-          - !Ref SubNetId6
   GetAllProductsByCategory:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -236,10 +216,48 @@ Resources:
         SubnetIds:
           - !Ref SubNetId1
           - !Ref SubNetId2
-          - !Ref SubNetId3
-          - !Ref SubNetId4
-          - !Ref SubNetId5
-          - !Ref SubNetId6
+  GetAllProductsByTag:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: vanlune-product-get-all-by-tag
+      Handler: >-
+        Products.Application::Products.Application.Function::GetAllProductsByTag
+      Runtime: dotnetcore3.1
+      CodeUri:
+        Bucket: !FindInMap 
+          - EnvironmentVariablesMap
+          - Function.Properties.CodeUri.Bucket
+          - !Ref EnvironmentType
+        Key: Products.zip
+      MemorySize: 256
+      Timeout: 900
+      Role: !Join ['', ['arn:aws:iam::', !Ref 'AWS::AccountId', ':role/role-lambda-vanlune']]
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Tracing: Active
+      Events:
+        HttpPost: 
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: '/products/tag'
+            Method: get
+      Environment:
+        Variables:
+          AWS_S3_Bucket: !FindInMap 
+            - EnvironmentVariablesMap
+            - Function.Properties.Products.Bucket
+            - !Ref EnvironmentType
+          DB_SECRET: !FindInMap 
+            - EnvironmentVariablesMap
+            - DbSecretName
+            - !Ref EnvironmentType
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroupId
+        SubnetIds:
+          - !Ref SubNetId1
+          - !Ref SubNetId2
   CreateCategory:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -282,10 +300,6 @@ Resources:
         SubnetIds:
           - !Ref SubNetId1
           - !Ref SubNetId2
-          - !Ref SubNetId3
-          - !Ref SubNetId4
-          - !Ref SubNetId5
-          - !Ref SubNetId6
   GetAllCategories:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -328,10 +342,6 @@ Resources:
         SubnetIds:
           - !Ref SubNetId1
           - !Ref SubNetId2
-          - !Ref SubNetId3
-          - !Ref SubNetId4
-          - !Ref SubNetId5
-          - !Ref SubNetId6
   GetCategory:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -374,10 +384,6 @@ Resources:
         SubnetIds:
           - !Ref SubNetId1
           - !Ref SubNetId2
-          - !Ref SubNetId3
-          - !Ref SubNetId4
-          - !Ref SubNetId5
-          - !Ref SubNetId6
   CreateTag:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -420,10 +426,6 @@ Resources:
         SubnetIds:
           - !Ref SubNetId1
           - !Ref SubNetId2
-          - !Ref SubNetId3
-          - !Ref SubNetId4
-          - !Ref SubNetId5
-          - !Ref SubNetId6
   GetTags:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -466,10 +468,6 @@ Resources:
         SubnetIds:
           - !Ref SubNetId1
           - !Ref SubNetId2
-          - !Ref SubNetId3
-          - !Ref SubNetId4
-          - !Ref SubNetId5
-          - !Ref SubNetId6
   CreateVariants:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -512,10 +510,6 @@ Resources:
         SubnetIds:
           - !Ref SubNetId1
           - !Ref SubNetId2
-          - !Ref SubNetId3
-          - !Ref SubNetId4
-          - !Ref SubNetId5
-          - !Ref SubNetId6
   GetVariants:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -558,7 +552,3 @@ Resources:
         SubnetIds:
           - !Ref SubNetId1
           - !Ref SubNetId2
-          - !Ref SubNetId3
-          - !Ref SubNetId4
-          - !Ref SubNetId5
-          - !Ref SubNetId6

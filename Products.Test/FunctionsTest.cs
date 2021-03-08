@@ -46,13 +46,30 @@ namespace Tests
             var lambdaContext = new Mock<ILambdaContext>(); ;
             var apiContext = _fixture
                 .Build<APIGatewayProxyRequest>()
-                .With(x=>x.QueryStringParameters, new Dictionary<string, string>() { {"category","gold"} })
+                .With(x=>x.QueryStringParameters, 
+                new Dictionary<string, string>() 
+                { {"category","gold"}, {"game","1"} })
                 .Create();
 
             var result = _function.GetAllProductsByCategory(apiContext, lambdaContext.Object);
 
         }
-    
+
+        [Fact]
+        public void GetAllPorductsByTag()
+        {
+            var lambdaContext = new Mock<ILambdaContext>(); ;
+            var apiContext = _fixture
+                .Build<APIGatewayProxyRequest>()
+                .With(x => x.QueryStringParameters,
+                new Dictionary<string, string>()
+                { {"tag","new"}, {"game","1"} })
+                .Create();
+
+            var result = _function.GetAllProductsByTag(apiContext, lambdaContext.Object);
+
+        }
+
         [Fact]
         public void InsertCategoryTest()
         {

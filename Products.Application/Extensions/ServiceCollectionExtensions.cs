@@ -39,6 +39,8 @@ namespace Products.Application.Extensions
             services.AddSingleton<IVariantsRepository, VariantsRepository>();
             services.AddSingleton<ITagsRepository, TagsRepository>();
             services.AddSingleton<IProductAggregationRepository, ProductAggregationRepository>();
+            services.AddSingleton<IServerRepository, ServerRepository>();
+            
 
             return services;
         }

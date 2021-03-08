@@ -9,7 +9,8 @@ namespace Products.Domain.DataAccess.Repositories
 {
     public interface IProductAggregationRepository
     {
-        Task<IEnumerable<ProductDto>> GetProductsDtoByCategory(string categoryName);
+        Task<IEnumerable<ProductDto>> GetProductsDtoByCategory(string categoryName, int idGame = 1);
+        Task<IEnumerable<ProductDto>> GetProductsDtoByTag(string tagName, int idGame = 1);
         Task InsertNewProduct(ProductDto product);
         Task UpdateProduct(Product product);
         Task DeleteProduct(ProductDto product);

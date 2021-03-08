@@ -12,6 +12,7 @@ namespace Products.Domain.Entities
         public string Name { get; set; }
         [JsonProperty("factor")]
         public decimal Factor { get; set; }
+        public Server Server { get; set; }
 
         public static Variants[] RemoveDuplicates(IEnumerable<Variants> vars)
         {

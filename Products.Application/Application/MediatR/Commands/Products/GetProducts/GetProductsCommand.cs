@@ -9,5 +9,6 @@ namespace Products.Application.Application.MediatR.Commands.GetProducts
     public class GetProductsCommand : IRequest<Response>
     {
         public string CategoryName { get; set; }
+        public int GameId { get; set; }
     }
 }

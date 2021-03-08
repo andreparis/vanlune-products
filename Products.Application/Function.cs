@@ -18,6 +18,7 @@ using Products.Application.Application.MediatR.Commands.Variants.CreateOrUpdateV
 using Products.Application.Application.MediatR.Commands.Variants.GetVariants;
 using Products.Application.Application.MediatR.Commands.CreateProducts;
 using Products.Application.Application.MediatR.Commands.Category.CreateCategory;
+using Products.Application.Application.MediatR.Commands.GetProductsByTags;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 namespace Products.Application
@@ -68,15 +69,38 @@ namespace Products.Application
             Console.WriteLine($"Requested {request.QueryStringParameters["category"]}");
 
             var name = request.QueryStringParameters["category"];
+            var gameId = request.QueryStringParameters["game"];
 
-            if (string.IsNullOrEmpty(name))
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(gameId))
                 return Response("You must inform a category's name!");
 
             lambdaContext.Logger.LogLine($"GetAllProducts query");
 
-            var command = new GetProductsCommand() 
+            var command = new GetProductsCommand()
             {
-                CategoryName = name
+                CategoryName = name,
+                GameId = Convert.ToInt32(gameId)
+            };
+
+            return MediatrSend(command);
+        }
+                
+        public APIGatewayProxyResponse GetAllProductsByTag(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
+        {
+            Console.WriteLine($"Requested {request.QueryStringParameters["tag"]}");
+
+            var name = request.QueryStringParameters["tag"];
+            var gameId = request.QueryStringParameters["game"];
+
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(gameId))
+                return Response("You must inform a tag's name!");
+
+            lambdaContext.Logger.LogLine($"GetAllProductsByTag query");
+
+            var command = new GetProductsByTagsCommand()
+            {
+                TagName = name,
+                GameId = Convert.ToInt32(gameId)
             };
 
             return MediatrSend(command);

@@ -28,7 +28,8 @@ namespace Products.Infrastructure.DataAccess.Database.Aggregation
             _mySqlConnHelper = mySqlConnHelper;
         }
 
-        public async Task<IEnumerable<ProductDto>> GetProductsDtoByCategory(string categoryName)
+        public async Task<IEnumerable<ProductDto>> GetProductsDtoByCategory(string categoryName
+            , int idGame = 1)
         {
             var query = $@"SELECT 
                         P.`id`          AS {nameof(ProductDto.Id)},
@@ -45,6 +46,7 @@ namespace Products.Infrastructure.DataAccess.Database.Aggregation
                         V.id            AS {nameof(Variants.Id)},
                         V.name          AS {nameof(Variants.Name)},
                         V.factor        AS {nameof(Variants.Factor)},
+                        V.idServer      AS {nameof(Server.Id)},
                         T.id            AS {nameof(Tags.Id)},
                         T.name          AS {nameof(Tags.Name)}
                         FROM Vanlune.Products as P
@@ -53,20 +55,82 @@ namespace Products.Infrastructure.DataAccess.Database.Aggregation
                         LEFT JOIN Vanlune.Variants as V on PV.idVariant = V.id
                         LEFT JOIN Vanlune.ProductsTags as PT on P.id = PT.idProducts
                         LEFT JOIN Vanlune.Tags as T on PT.idTags = T.id
-                        WHERE C.Name = @categoryName;";
+                        WHERE C.Name = @categoryName
+                        AND P.idGames = @idGame;";
 
             using var connection = _mySqlConnHelper.MySqlConnection();
 
             if (connection.State != System.Data.ConnectionState.Open)
                 connection.Open();
 
-            var result = await connection.QueryAsync<ProductDto, Images, Category, Variants, Tags, ProductDto>(query,
-            (prductDto, image, category, variant, tags) =>
+            var result = await connection.QueryAsync<ProductDto, Images, Category, Variants, Server, Tags, ProductDto>(query,
+            (prductDto, image, category, variant, server, tags) =>
             {
                 if (image != null)
                     prductDto.Image = new Images() { Src = image.Src };
                 if (category != null)
                     prductDto.Category = category;
+                if (server != null)
+                    variant.Server = server;
+                if (variant != null)
+                    prductDto.Variants = new Variants[] { variant };
+                if (tags != null && !string.IsNullOrEmpty(tags.Name))
+                    prductDto.Tags = new string[] { tags.Name };
+                
+                return prductDto;
+            }, new
+            {
+                categoryName,
+                idGame
+            }, splitOn: $"{nameof(Images.Src)},{nameof(Category.Id)},{nameof(Variants.Id)},{nameof(Tags.Id)},{nameof(Server.Id)}") ;
+
+            return result;
+        }
+
+        public async Task<IEnumerable<ProductDto>> GetProductsDtoByTag(string tagName
+            , int idGame = 1)
+        {
+            var query = $@"SELECT 
+                        P.`id`          AS {nameof(ProductDto.Id)},
+                        P.`title`       AS {nameof(ProductDto.Title)},
+                        P.`description` AS {nameof(ProductDto.Description)},
+                        P.`sale`        AS {nameof(ProductDto.Sale)},
+                        P.`price`       AS {nameof(ProductDto.Price)},
+                        P.`quantity`    AS {nameof(ProductDto.Quantity)},
+                        P.`discount`    AS {nameof(ProductDto.Discount)},
+                        P.`images_src`  AS {nameof(Images.Src)},
+                        P.`idCategory`  AS {nameof(Category.Id)},
+                        C.id            AS {nameof(Category.Id)},
+                        C.name          AS {nameof(Category.Name)},
+                        V.id            AS {nameof(Variants.Id)},
+                        V.name          AS {nameof(Variants.Name)},
+                        V.factor        AS {nameof(Variants.Factor)},
+                        V.idServer      AS {nameof(Server.Id)},
+                        T.id            AS {nameof(Tags.Id)},
+                        T.name          AS {nameof(Tags.Name)}
+                        FROM Vanlune.Products as P
+                        JOIN Vanlune.Category as C on P.idCategory = C.id
+                        LEFT JOIN Vanlune.ProductsVariants as PV on P.id = PV.idProduct
+                        LEFT JOIN Vanlune.Variants as V on PV.idVariant = V.id
+                        LEFT JOIN Vanlune.ProductsTags as PT on P.id = PT.idProducts
+                        LEFT JOIN Vanlune.Tags as T on PT.idTags = T.id
+                        WHERE T.Name = @tagName
+                        AND P.idGames = @idGame;";
+
+            using var connection = _mySqlConnHelper.MySqlConnection();
+
+            if (connection.State != System.Data.ConnectionState.Open)
+                connection.Open();
+
+            var result = await connection.QueryAsync<ProductDto, Images, Category, Variants, Server, Tags, ProductDto>(query,
+            (prductDto, image, category, variant, server, tags) =>
+            {
+                if (image != null)
+                    prductDto.Image = new Images() { Src = image.Src };
+                if (category != null)
+                    prductDto.Category = category;
+                if (server != null)
+                    variant.Server = server;
                 if (variant != null)
                     prductDto.Variants = new Variants[] { variant };
                 if (tags != null && !string.IsNullOrEmpty(tags.Name))
@@ -75,8 +139,9 @@ namespace Products.Infrastructure.DataAccess.Database.Aggregation
                 return prductDto;
             }, new
             {
-                categoryName
-            }, splitOn: $"{nameof(Images.Src)},{nameof(Category.Id)},{nameof(Variants.Id)},{nameof(Tags.Id)}") ;
+                tagName,
+                idGame
+            }, splitOn: $"{nameof(Images.Src)},{nameof(Category.Id)},{nameof(Variants.Id)},{nameof(Tags.Id)},{nameof(Server.Id)}");
 
             return result;
         }
