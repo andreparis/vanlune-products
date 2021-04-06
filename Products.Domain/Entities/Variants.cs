@@ -20,7 +20,7 @@ namespace Products.Domain.Entities
 
             foreach (var v in vars)
             {
-                if (!newVariants.Any(a => a.Name.Equals(v.Name)))
+                if (v != null && !newVariants.Any(a =>a.Name.Equals(v.Name)))
                     newVariants.Add(v);
             }
 

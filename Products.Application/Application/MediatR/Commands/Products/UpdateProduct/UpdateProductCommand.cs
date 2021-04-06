@@ -12,6 +12,8 @@ namespace Products.Application.Application.MediatR.Commands.UpdateProduct
         public IEnumerable<Domain.Entities.Variants> RemovedVariants { get; set; }
         public string[] NewTags { get; set; }
         public string[] RemovedTags { get; set; }
+        public IEnumerable<Customize> NewCustomizes { get; set; }
+        public IEnumerable<Customize> RemovedCustomizes { get; set; }
 
     }
 }

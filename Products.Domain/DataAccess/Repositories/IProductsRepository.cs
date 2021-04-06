@@ -9,7 +9,7 @@ namespace Products.Domain.DataAccess.Repositories
     public interface IProductsRepository
     {
         Task<int> InsertProduct(Product product);
-        Task<int> UpdateProduct(Product product);
+        Task UpdateProduct(Product product);
         Task<int> DeleteProductById(int id);
     }
 }

@@ -13,6 +13,8 @@ using Products.Infrastructure.DataAccess.Database.Base;
 using Products.Domain.DataAccess.Repositories;
 using Products.Infrastructure.DataAccess.Database;
 using Products.Infrastructure.DataAccess.Database.Aggregation;
+using Products.Domain.Rest;
+using Products.Infrastructure.Rest;
 
 namespace Products.Application.Extensions
 {
@@ -40,7 +42,12 @@ namespace Products.Application.Extensions
             services.AddSingleton<ITagsRepository, TagsRepository>();
             services.AddSingleton<IProductAggregationRepository, ProductAggregationRepository>();
             services.AddSingleton<IServerRepository, ServerRepository>();
-            
+            services.AddSingleton<ICustomizeRepository, CustomizeRepository>();
+            services.AddSingleton<IGameRepository, GameRepository>();
+
+            services.AddSingleton<ISecretApi, SecretApi>();
+
+            services.AddHttpClient();
 
             return services;
         }

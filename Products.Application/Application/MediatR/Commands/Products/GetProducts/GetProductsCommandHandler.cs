@@ -35,7 +35,13 @@ namespace Products.Application.Application.MediatR.Commands.GetProducts
                 .CurrentCulture
                 .TextInfo
                 .ToTitleCase(request.CategoryName.Trim().ToLowerInvariant());
-            var result = _productsRepository.GetProductsDtoByCategory(category, request.GameId).Result;
+            var result = _productsRepository
+                .GetProductsDtoByFilters(
+                new Dictionary<string, string>()
+                {
+                    {"category", category },
+                    {"game", request.GameId.ToString() }
+                }).Result;
             var servers = _server.GetAll(request.GameId).Result;
 
             var products = result.GroupBy(a => a.Id);

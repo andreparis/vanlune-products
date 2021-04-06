@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Products.Application.Application.MediatR.Commands.CreateProducts
 {
-    public class UpdateProductsCommand : IRequest<Response>
+    public class CreateOrUpdateProductsCommand : IRequest<Response>
     {
         public ProductDto Product { get; set; }
     }

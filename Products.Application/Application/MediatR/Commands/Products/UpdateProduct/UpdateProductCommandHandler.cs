@@ -29,6 +29,8 @@ namespace Products.Application.Application.MediatR.Commands.UpdateProduct
                 _productsRepository.RemoveTagsByProduct(request.RemovedTags, request.Product),
                 _productsRepository.SetVariantsToProduct(request.NewVariants, request.Product),
                 _productsRepository.RemoveVariantsByProducts(request.RemovedVariants, request.Product),
+                _productsRepository.SetCustomizesToProduct(request.NewCustomizes, request.Product),
+                _productsRepository.RemoveCustomizesByProduct(request.RemovedCustomizes, request.Product),
                 _productsRepository.UpdateProduct(request.Product)
             };
 

@@ -7,49 +7,23 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace Products.Infraestructure.DataAccess.S3
 {
-    public class ProductsS3 : S3Helper<Product>, IProductsS3
+    public class ProductsS3 : S3Helper<string>, IProductsS3
     {
-        private readonly string KEY_BASE = "product/";
+        private readonly string KEY_BASE = "products/";
 
         public ProductsS3(IConfiguration configuration, 
             ILogger logger) : base(logger, configuration) 
         {
         }
 
-        public void DeleteProducts(string product)
+        public async Task<string> UploadImage(Stream inputStream, string fileName)
         {
-            var key = string.Concat(KEY_BASE, product);
-
-            Delete(key);
-        }
-
-        public void AddProduct(string path, Product product)
-        {
-            var key = string.Concat(KEY_BASE, path);
-
-            Upload(JsonConvert.SerializeObject(product), key);
-        }
-
-        public IEnumerable<Product> GetAllProduct()
-        {
-            return GetAll(KEY_BASE);
-        }
-
-        public Product GetProduct(string product)
-        {
-            var key = string.Concat(KEY_BASE, product);
-
-            return GetJsonFile(key);
-        }
-
-        public IEnumerable<Product> GetProductsByCategory(string category)
-        {
-            var key = string.Concat(KEY_BASE, category, "/");
-
-            return GetAll(key);
+            return await UploadFile(inputStream, string.Concat(KEY_BASE, fileName)).ConfigureAwait(false);
         }
     }
 }

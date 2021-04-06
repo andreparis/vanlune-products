@@ -21,6 +21,9 @@ namespace Products.Domain.Entities
         public int Quantity { get; set; }
         [JsonProperty("discount")]
         public decimal Discount { get; set; }
+        [JsonProperty("image")]
         public Images Image { get; set; }
+        [JsonProperty("customizes")]
+        public IEnumerable<Customize> Customizes { get; set; }
     }
 }

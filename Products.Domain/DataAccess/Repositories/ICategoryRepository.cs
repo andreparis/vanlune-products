@@ -8,9 +8,11 @@ namespace Products.Domain.DataAccess.Repositories
 {
     public interface ICategoryRepository
     {
+        Task<IEnumerable<Category>> GetCategoriesByGameId(int idGame);
         Task<IEnumerable<Category>> GetAll();
         Task<Category> GetCategory(int id);
         Task<int> InsertAsync(Category category);
-        Task<int> UpdateAsync(Category category);
+        Task UpdateAsync(Category category);
+        Task DeleteAsync(int id);
     }
 }

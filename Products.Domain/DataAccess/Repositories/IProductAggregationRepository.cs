@@ -9,8 +9,7 @@ namespace Products.Domain.DataAccess.Repositories
 {
     public interface IProductAggregationRepository
     {
-        Task<IEnumerable<ProductDto>> GetProductsDtoByCategory(string categoryName, int idGame = 1);
-        Task<IEnumerable<ProductDto>> GetProductsDtoByTag(string tagName, int idGame = 1);
+        Task<IEnumerable<ProductDto>> GetProductsDtoByFilters(IDictionary<string, string> filters);
         Task InsertNewProduct(ProductDto product);
         Task UpdateProduct(Product product);
         Task DeleteProduct(ProductDto product);
@@ -18,5 +17,7 @@ namespace Products.Domain.DataAccess.Repositories
         Task RemoveVariantsByProducts(IEnumerable<Variants> variants, Product product);
         Task SetTagsToProduct(string[] tagsNames, Product product);
         Task RemoveTagsByProduct(string[] tagsNames, Product product);
+        Task SetCustomizesToProduct(IEnumerable<Customize> customizes, Product product);
+        Task RemoveCustomizesByProduct(IEnumerable<Customize> customizes, Product product);
     }
 }

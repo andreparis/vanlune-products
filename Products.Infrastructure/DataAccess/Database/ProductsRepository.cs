@@ -58,18 +58,18 @@ namespace Products.Infrastructure.DataAccess.Database
             return result.Single();
         }
 
-        public async Task<int> UpdateProduct(Product product)
+        public async Task UpdateProduct(Product product)
         {
             var query = $@"UPDATE `Vanlune`.`Products`
                             SET
-                            `title` =  (@{nameof(Product.Title)},
+                            `title` =  @{nameof(Product.Title)},
                             `description` = @{nameof(Product.Description)},
                             `sale` = @{nameof(Product.Sale)},
                             `price` = @{nameof(Product.Price)},
                             `quantity` =  @{nameof(Product.Quantity)},
                             `discount` =@{nameof(Product.Discount)},
                             `images_src` = @{nameof(Images.Src)},
-                            `idCategory` = @{nameof(Product.Category.Id)})
+                            `idCategory` = @{nameof(Product.Category.Id)}
                             WHERE `id` = @idProduct;";
 
             using var connection = _mySqlConnHelper.MySqlConnection();
@@ -77,7 +77,7 @@ namespace Products.Infrastructure.DataAccess.Database
             if (connection.State != ConnectionState.Open)
                 connection.Open();
 
-            var result = await connection.QueryAsync<int>(query, new
+            var result = await connection.ExecuteAsync(query, new
             {
                 product.Title,
                 product.Description,
@@ -89,8 +89,6 @@ namespace Products.Infrastructure.DataAccess.Database
                 product.Category.Id,
                 idProduct = product.Id
             });
-
-            return result.Single();
         }
     
         public async Task<int> DeleteProductById(int id)

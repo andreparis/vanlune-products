@@ -11,6 +11,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
+using System.Net;
 
 namespace Products.Infraestructure.DataAccess.S3
 {
@@ -25,17 +27,14 @@ namespace Products.Infraestructure.DataAccess.S3
             IConfiguration configuration)
         {
             _logger = logger;
+            _bucketName = configuration["BUCKET_IMAGES"];
 
             if (Debugger.IsAttached)
-            {
-                _amazonS3 = new AmazonS3Client(new BasicAWSCredentials(configuration["AWS:AccessKey"], configuration["AWS:SecretKey"]), RegionEndpoint.USEast1);
-                _bucketName = configuration["AWS:S3:Bucket"];
-            }
+                _amazonS3 = new AmazonS3Client(new BasicAWSCredentials(configuration["AWS:AccessKey"], 
+                    configuration["AWS:SecretKey"]), 
+                    RegionEndpoint.USEast1);
             else
-            {
-                _amazonS3 = new AmazonS3Client(RegionEndpoint.USEast1);
-                _bucketName = configuration["AWS_S3_Bucket"];
-            }            
+                _amazonS3 = new AmazonS3Client(RegionEndpoint.USEast1);            
         }
 
         public IEnumerable<T> GetList(string keyName)
@@ -202,6 +201,34 @@ namespace Products.Infraestructure.DataAccess.S3
                 _logger.Info(ex.InnerException.ToString());
                 _logger.Info(ex.StackTrace);
                 throw;
+            }
+        }
+
+        public async Task<string> UploadFile(Stream inputStream, string fileName)
+        {
+            _logger.Info($"bucket is {_bucketName}");
+            try
+            {
+                PutObjectRequest request = new PutObjectRequest()
+                {
+                    InputStream = inputStream,
+                    BucketName = _bucketName,
+                    Key = fileName
+                };
+                PutObjectResponse response = await _amazonS3
+                    .PutObjectAsync(request)
+                    .ConfigureAwait(false);
+
+                if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
+                    return $"https://vanlune-site-images.s3.amazonaws.com/{fileName}";
+                else
+                    return "";
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Error {ex.Message} at {ex.StackTrace}");
+
+                throw ex;
             }
         }
 

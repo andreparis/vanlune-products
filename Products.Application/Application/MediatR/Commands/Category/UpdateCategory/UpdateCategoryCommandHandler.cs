@@ -26,12 +26,9 @@ namespace Products.Application.Application.MediatR.Commands.Category.UpdateCateg
                 };
             }
 
-            var result = _categoryRepository.UpdateAsync(request.Category).Result;
+            _categoryRepository.UpdateAsync(request.Category).GetAwaiter().GetResult();
 
-            return new HandleResponse()
-            {
-                Content = result
-            };
+            return new HandleResponse();
         }
     }
 }

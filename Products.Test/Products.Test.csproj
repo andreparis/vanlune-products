@@ -30,4 +30,10 @@
     <ProjectReference Include="..\Products.Application\Products.Application.csproj" />
   </ItemGroup>
 
+	<ItemGroup>
+		<EmbeddedResource Include="Files\mythic.jpg">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</EmbeddedResource>
+	</ItemGroup>
+
 </Project>

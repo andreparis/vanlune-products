@@ -2,16 +2,14 @@
 using Products.Domain.Entities;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Products.Domain.DataAccess.S3
 {
-    public interface IProductsS3 : IS3Helper<Product>
+    public interface IProductsS3 : IS3Helper<string>
     {
-        void DeleteProducts(string setting);
-        void AddProduct(string settingName, Product setting);
-        IEnumerable<Product> GetAllProduct();
-        Product GetProduct(string product);
-        IEnumerable<Product> GetProductsByCategory(string category);
+        Task<string> UploadImage(Stream inputStream, string fileName);
     }
 }

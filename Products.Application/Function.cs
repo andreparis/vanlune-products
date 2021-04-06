@@ -19,6 +19,18 @@ using Products.Application.Application.MediatR.Commands.Variants.GetVariants;
 using Products.Application.Application.MediatR.Commands.CreateProducts;
 using Products.Application.Application.MediatR.Commands.Category.CreateCategory;
 using Products.Application.Application.MediatR.Commands.GetProductsByTags;
+using Products.Application.Application.MediatR.Commands.GetProductById;
+using Products.Application.Application.MediatR.Commands.GetProductsByFilters;
+using Products.Application.Application.MediatR.Commands.Customizes.DeleteCustomizes;
+using Products.Application.Application.MediatR.Commands.Customizes.UpdateCustomizes;
+using Products.Application.Application.MediatR.Commands.Customizes.CreateCustomizes;
+using Products.Application.Application.MediatR.Commands.Customizes.GetCustomizesByFilters;
+using Products.Application.Application.MediatR.Commands.Variants.GetServersVariants;
+using Products.Application.Application.MediatR.Commands.UploadImages;
+using Products.Application.Application.MediatR.Commands.Category.GetCategoryByGame;
+using Products.Application.Application.MediatR.Commands.Game.GetAllGames;
+using Products.Application.Application.MediatR.Commands.Category.UpdateCategory;
+using Products.Application.Application.MediatR.Commands.Category.DeleteCategory;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 namespace Products.Application
@@ -47,14 +59,21 @@ namespace Products.Application
         {
             lambdaContext.Logger.LogLine($"Body {request.Body}");
 
-            return Request<UpdateProductsCommand>(request.Body);
+            return Request<CreateOrUpdateProductsCommand>(request.Body);
         }
 
         public APIGatewayProxyResponse UpdateProducts(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
         {
             lambdaContext.Logger.LogLine($"Body {request.Body}");
 
-            return Request<UpdateProductsCommand>(request.Body);
+            return Request<CreateOrUpdateProductsCommand>(request.Body);
+        }
+
+        public APIGatewayProxyResponse UploadImages(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
+        {
+            lambdaContext.Logger.LogLine($"Body {request.Body}");
+
+            return Request<UploadImagesCommand>(request.Body);
         }
 
         public APIGatewayProxyResponse DeleteProducts(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
@@ -62,6 +81,41 @@ namespace Products.Application
             lambdaContext.Logger.LogLine($"Body {request.Body}");
 
             return Request<DeleteProductsCommand>(request.Body);
+        }
+
+        public APIGatewayProxyResponse GetProductsByFilters(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
+        {
+
+            if (request.QueryStringParameters.Keys.Count == 0)
+                return Response("You must inform a game's id!");
+
+            lambdaContext.Logger.LogLine($"GetProductById query");
+
+            var command = new GetProductsByFiltersCommand()
+            {
+                Filters = request.QueryStringParameters
+            };
+
+            return MediatrSend(command);
+        }
+
+        public APIGatewayProxyResponse GetProductById(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
+        {
+            Console.WriteLine($"Requested {request.QueryStringParameters["product"]}");
+
+            var product = request.QueryStringParameters["product"];
+
+            if (string.IsNullOrEmpty(product))
+                return Response("You must inform a product's id!");
+
+            lambdaContext.Logger.LogLine($"GetProductById query");
+
+            var command = new GetProductByIdCommand()
+            {
+                Id = Convert.ToInt32(product)
+            };
+
+            return MediatrSend(command);
         }
 
         public APIGatewayProxyResponse GetAllProductsByCategory(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
@@ -107,13 +161,32 @@ namespace Products.Application
         }
         #endregion
 
-
         #region Categories
         public APIGatewayProxyResponse CreateCategory(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
         {
             lambdaContext.Logger.LogLine($"Body {request.Body}");
 
             return Request<CreateCategoryCommand>(request.Body);
+        }
+
+        public APIGatewayProxyResponse UpdateCategory(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
+        {
+            lambdaContext.Logger.LogLine($"Body {request.Body}");
+
+            return Request<UpdateCategoryCommand>(request.Body);
+        }
+
+        public APIGatewayProxyResponse DeleteCategory(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
+        {
+            lambdaContext.Logger.LogLine($"Body {request.Body}");
+
+            var id = request.QueryStringParameters["id"];
+            if (string.IsNullOrEmpty(id))
+                return Response("You must inform a category's Id!");
+
+            var command = new DeleteCategoryCommand() { Id = Convert.ToInt32(id) };
+
+            return MediatrSend(command);
         }
 
         public APIGatewayProxyResponse GetCategory(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
@@ -130,6 +203,25 @@ namespace Products.Application
             var command = new GetCategoryCommand()
             {
                 Id = Convert.ToInt32(id)
+            };
+
+            return MediatrSend(command);
+        }
+
+        public APIGatewayProxyResponse GetCategoryByGame(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
+        {
+            Console.WriteLine($"Requested {request.QueryStringParameters["game"]}");
+
+            var id = request.QueryStringParameters["game"];
+
+            if (string.IsNullOrEmpty(id))
+                return Response("You must inform a category's Id!");
+
+            lambdaContext.Logger.LogLine($"GetAllCategories query");
+
+            var command = new GetCategoryByGameCommand()
+            {
+                Game = Convert.ToInt32(id)
             };
 
             return MediatrSend(command);
@@ -179,8 +271,85 @@ namespace Products.Application
 
             return MediatrSend(command);
         }
+
+        public APIGatewayProxyResponse GetAllServersVariants(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
+        {
+            Console.WriteLine($"Requested {request.QueryStringParameters["game"]}");
+
+            var game = request.QueryStringParameters["game"];
+
+            if (string.IsNullOrEmpty(game))
+                return Response("You must inform a game's id!");
+
+            var command = new GetServersVariantsCommand() 
+            {
+                Game = Convert.ToInt32(game)
+            };
+
+            return MediatrSend(command);
+        }
         #endregion
 
+        #region Customizes
+        public APIGatewayProxyResponse CreateCustomize(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
+        {
+            lambdaContext.Logger.LogLine($"Body {request.Body}");
+
+            return Request<CreateCustomizesCommand>(request.Body);
+        }
+
+        public APIGatewayProxyResponse UpdateCustomizes(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
+        {
+            lambdaContext.Logger.LogLine($"Body {request.Body}");
+
+            return Request<UpdateCustomizesCommand>(request.Body);
+        }
+
+        public APIGatewayProxyResponse GetCustomizesByFilters(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
+        {
+            Console.WriteLine($"Requested {request.QueryStringParameters["game"]}");
+
+            var game = request.QueryStringParameters["game"];
+
+            if (string.IsNullOrEmpty(game))
+                return Response("You must inform a game's id!");
+
+            lambdaContext.Logger.LogLine($"GetCustomizesByFilters query");
+
+            var command = new GetCustomizesByFiltersCommand()
+            {
+                Game = Convert.ToInt32(game),
+                Filters = request.QueryStringParameters
+            };
+
+            return MediatrSend(command);
+        }
+
+        public APIGatewayProxyResponse DeleteCustomizes(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
+        {
+            lambdaContext.Logger.LogLine($"Body {request.QueryStringParameters["id"]}");
+
+            var id = request.QueryStringParameters["id"];
+            if (string.IsNullOrEmpty(id))
+                return Response("You must inform a category's Id!");
+
+            var command = new DeleteCustomizesCommand() { Ids = new int[] { Convert.ToInt32(id) } };
+
+            return MediatrSend(command);
+        }
+        #endregion
+
+        #region Game
+
+        #endregion
+        public APIGatewayProxyResponse GetAllGames(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
+        {
+            lambdaContext.Logger.LogLine($"GetGames query");
+
+            var command = new GetAllGamesCommand();
+
+            return MediatrSend(command);
+        }
         #endregion
 
         #region Private Methods
@@ -218,7 +387,8 @@ namespace Products.Application
             var header = new Dictionary<string, string>
             {
                 { "Content-Type", "application/json" },
-                { "Access-Control-Allow-Origin", "*" }
+                { "Access-Control-Allow-Origin", "*" },
+                { "Access-Control-Allow-Credentials", "true" }
             };
 
             return new APIGatewayProxyResponse
